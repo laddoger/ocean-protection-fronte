@@ -367,6 +367,27 @@ const addComment = async (post: Post) => {
   }
 }
 
+// 加载评论
+const loadComments = async (post: Post) => {
+  try {
+    const response = await forumApi.getComments(post.id)
+    if (response.code === 200) {
+      // 更新帖子的评论列表和评论数
+      const index = posts.value.findIndex(p => p.id === post.id)
+      if (index !== -1) {
+        posts.value[index] = {
+          ...posts.value[index],
+          comments: response.data,
+          commentCount: response.data.length // 使用实际的评论数量
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load comments:', error)
+    ElMessage.error('加载评论失败')
+  }
+}
+
 // 点赞/取消点赞
 const toggleLike = async (post: Post) => {
   if (!userStore.isLoggedIn) {

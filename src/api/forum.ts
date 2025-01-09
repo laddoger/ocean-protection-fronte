@@ -62,18 +62,18 @@ export const forumApi = {
     request.delete<ApiResponse<void>>(`/forum/posts/${id}`),
   
   // 获取评论列表
-  // getComments: (postId: number) => 
-  //   request.get<ApiResponse<ForumComment[]>>(`/forum/posts/${postId}/comments/list`),
   getComments: (postId: number) => 
     request.get<ApiResponse<Comment[]>>(`/forum/posts/${postId}/comments`),
   
   // 添加评论
-  // addComment: (postId: number, content: string) => 
-  //   request.post<ApiResponse<ForumComment>>(`/forum/posts/${postId}/comments/add`, { content }),
   addComment: (postId: number, content: string) =>
     request.post<ApiResponse<Comment[]>>(`/forum/posts/${postId}/comments/add`, { content }),
     
   // 点赞/取消点赞
   toggleLike: (postId: number) => 
-    request.post<ApiResponse<void>>(`/forum/posts/${postId}/like`)
+    request.post<ApiResponse<void>>(`/forum/posts/${postId}/like`),
+  
+  // 更新帖子评论数
+  updatePostCommentCount: (postId: number) =>
+    request.get<ApiResponse<Post>>(`/forum/posts/${postId}`)
 } 
