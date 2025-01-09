@@ -1,0 +1,32 @@
+ocean-protection-frontend/
+├── src/
+│   ├── api/
+│   │   ├── user.ts
+│   │   ├── animal.ts
+│   │   ├── forum.ts
+│   │   └── volunteer.ts
+│   ├── assets/
+│   ├── components/
+│   │   ├── common/
+│   │   └── layout/
+│   ├── router/
+│   │   └── index.ts
+│   ├── stores/
+│   │   └── user.ts
+│   ├── types/
+│   │   └── index.ts
+│   ├── utils/
+│   │   └── request.ts
+│   ├── views/
+│   │   ├── login/
+│   │   ├── register/
+│   │   ├── home/
+│   │   ├── animal/
+│   │   ├── pollution/
+│   │   ├── forum/
+│   │   ├── volunteer/
+│   │   └── profile/
+│   ├── App.vue
+│   └── main.ts
+├── index.html
+└── package.json 
