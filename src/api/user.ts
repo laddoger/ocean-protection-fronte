@@ -91,13 +91,13 @@ export function getUserPosts() {
 }
 
 export const userApi = {
-  // 获取用户完整信息
+  // 获取用户个人信息
   getProfile: () => 
-    request.get<ApiResponse<UserProfile>>('/auth/user/profile'),
+    request.get<ApiResponse<UserProfile>>('/auth/user/info'),
   
-  // 更新用户信息
+  // 更新用户个人信息
   updateProfile: (data: UpdateProfileRequest) =>
-    request.put<ApiResponse<UserProfile>>('/auth/user/profile', data),
+    request.put<ApiResponse<UserProfile>>('/auth/user/info', data),
   
   // 获取用户发表的帖子
   getUserPosts: () =>
