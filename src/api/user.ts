@@ -111,15 +111,14 @@ export const userApi = {
     request.put<ApiResponse<UserProfile>>('/auth/user/info', data),
   
   // 获取用户发表的帖子列表
-  // 注意：这里修改了请求路径为 /forum/posts，以匹配后端接口
   getUserPosts: () => 
-    request.get<ApiResponse<Post[]>>('/forum/posts'),
+    request.get<ApiResponse<Post[]>>('/auth/user/posts'),
   
   // 获取用户加入的组织列表
   getUserOrganizations: () =>
-    request.get<Organization[]>('/volunteer/organizations'),
+    request.get<ApiResponse<Organization[]>>('/auth/user/organizations'),
   
   // 获取用户参加的活动列表
   getUserActivities: () =>
-    request.get<Activity[]>('/volunteer/activities/ongoing'),
+    request.get<ApiResponse<Activity[]>>('/auth/user/activities')
 } 
