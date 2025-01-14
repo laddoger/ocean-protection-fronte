@@ -6,12 +6,12 @@
       <p>让我们一起为海洋生态保护贡献力量</p>
     </div>
 
-    <!-- 精选海洋生物展示 -->
+    <!-- 海洋生物展示 -->
     <div class="featured-animals">
-      <h2>精选海洋生物</h2>
+      <h2>海洋生物图鉴</h2>
       <el-row :gutter="20">
         <el-col 
-          v-for="animal in featuredAnimals" 
+          v-for="animal in animals" 
           :key="animal.id" 
           :xs="24" 
           :sm="12" 
@@ -22,6 +22,7 @@
             <div class="animal-info">
               <h3>{{ animal.name }}</h3>
               <p class="scientific-name">{{ animal.scientificName }}</p>
+              <p class="category">{{ animal.category }}</p>
               <el-tag :type="getStatusType(animal.conservationStatus)">
                 {{ animal.conservationStatus }}
               </el-tag>
@@ -53,19 +54,21 @@ import { getFeaturedAnimals } from '@/api/animal'
 import type { Animal } from '@/api/animal'
 import AnimalDetail from '@/components/AnimalDetail.vue'
 
-const featuredAnimals = ref<Animal[]>([])
+const animals = ref<Animal[]>([])
 const selectedAnimal = ref<Animal | null>(null)
 const dialogVisible = ref(false)
 
 // 获取保护状态对应的标签类型
 const getStatusType = (status: string) => {
   switch (status) {
-    case 'EN濒危':
+    case '濒危':
       return 'danger'
-    case 'VU易危':
+    case '易危':
       return 'warning'
-    default:
+    case '近危':
       return 'info'
+    default:
+      return ''
   }
 }
 
@@ -75,21 +78,21 @@ const showAnimalDetail = (animal: Animal) => {
   dialogVisible.value = true
 }
 
-// 加载精选动物数据
-const loadFeaturedAnimals = async () => {
+// 加载动物数据
+const loadAnimals = async () => {
   try {
     const response = await getFeaturedAnimals()
     if (response.code === 200) {
-      featuredAnimals.value = response.data
+      animals.value = response.data
     }
   } catch (error) {
-    console.error('加载精选动物失败:', error)
+    console.error('加载动物数据失败:', error)
     ElMessage.error('加载数据失败')
   }
 }
 
 onMounted(() => {
-  loadFeaturedAnimals()
+  loadAnimals()
 })
 </script>
 
@@ -145,5 +148,11 @@ onMounted(() => {
 
 .el-tag {
   margin-top: 10px;
+}
+
+.category {
+  color: #909399;
+  margin: 5px 0;
+  font-size: 14px;
 }
 </style> 

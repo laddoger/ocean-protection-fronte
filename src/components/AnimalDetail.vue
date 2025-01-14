@@ -1,22 +1,20 @@
 <template>
   <div class="animal-detail">
-    <el-image :src="animal.image_url" fit="cover" class="detail-image" />
-    
     <div class="detail-content">
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="分类">
-          {{ animal.category?.name }}
+        <el-descriptions-item label="名称">
+          {{ animal.name }}
         </el-descriptions-item>
-        <el-descriptions-item label="保护状态">
-          <el-tag :type="getConservationTagType(animal.conservation)">
-            {{ animal.conservation }}
-          </el-tag>
+        <el-descriptions-item label="学名">
+          {{ animal.scientificName }}
         </el-descriptions-item>
         <el-descriptions-item label="栖息地">
           {{ animal.habitat }}
         </el-descriptions-item>
-        <el-descriptions-item label="饮食习性">
-          {{ animal.diet }}
+        <el-descriptions-item label="保护状态">
+          <el-tag :type="getStatusType(animal.conservationStatus)">
+            {{ animal.conservationStatus }}
+          </el-tag>
         </el-descriptions-item>
       </el-descriptions>
 
@@ -33,10 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import type { Animal } from '@/types/animal'
-
-const router = useRouter()
+import type { Animal } from '@/api/animal'
 
 defineProps<{
   animal: Animal
@@ -46,29 +41,23 @@ defineEmits<{
   (e: 'close'): void
 }>()
 
-const getConservationTagType = (status: string) => {
-  const types: { [key: string]: string } = {
-    '极危': 'danger',
-    '濒危': 'warning',
-    '易危': 'warning',
-    '近危': 'info',
-    '无危': 'success'
+const getStatusType = (status: string) => {
+  switch (status) {
+    case 'EN濒危':
+      return 'danger'
+    case 'VU易危':
+      return 'warning'
+    case 'NT近危':
+      return 'info'
+    default:
+      return 'info'
   }
-  return types[status] || 'info'
 }
 </script>
 
 <style scoped>
 .animal-detail {
   padding: 20px;
-}
-
-.detail-image {
-  width: 100%;
-  max-height: 400px;
-  object-fit: cover;
-  margin-bottom: 20px;
-  border-radius: 8px;
 }
 
 .detail-content {
