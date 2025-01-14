@@ -6,10 +6,28 @@
       <p>让我们一起为海洋生态保护贡献力量</p>
     </div>
 
+    <!-- 搜索栏 -->
+    <div class="search-section">
+      <el-input
+        v-model="searchKeyword"
+        placeholder="搜索海洋生物..."
+        class="search-input"
+        clearable
+        @keyup.enter="handleSearch"
+      >
+        <template #append>
+          <el-button @click="handleSearch">
+            <el-icon><Search /></el-icon>
+          </el-button>
+        </template>
+      </el-input>
+    </div>
+
     <!-- 海洋生物展示 -->
     <div class="featured-animals">
-      <h2>海洋生物图鉴</h2>
-      <el-row :gutter="20">
+      <h2>{{ isSearching ? '搜索结果' : '海洋生物图鉴' }}</h2>
+      <el-empty v-if="isSearching && animals.length === 0" description="未找到相关结果" />
+      <el-row :gutter="20" v-else>
         <el-col 
           v-for="animal in animals" 
           :key="animal.id" 
@@ -50,13 +68,16 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getFeaturedAnimals } from '@/api/animal'
+import { Search } from '@element-plus/icons-vue'
+import { animalApi, getFeaturedAnimals } from '@/api/animal'
 import type { Animal } from '@/api/animal'
 import AnimalDetail from '@/components/AnimalDetail.vue'
 
 const animals = ref<Animal[]>([])
 const selectedAnimal = ref<Animal | null>(null)
 const dialogVisible = ref(false)
+const searchKeyword = ref('')
+const isSearching = ref(false)
 
 // 获取保护状态对应的标签类型
 const getStatusType = (status: string) => {
@@ -78,7 +99,7 @@ const showAnimalDetail = (animal: Animal) => {
   dialogVisible.value = true
 }
 
-// 加载动物数据
+// 加载所有动物数据
 const loadAnimals = async () => {
   try {
     const response = await getFeaturedAnimals()
@@ -88,6 +109,26 @@ const loadAnimals = async () => {
   } catch (error) {
     console.error('加载动物数据失败:', error)
     ElMessage.error('加载数据失败')
+  }
+}
+
+// 处理搜索
+const handleSearch = async () => {
+  if (!searchKeyword.value.trim()) {
+    isSearching.value = false
+    await loadAnimals()
+    return
+  }
+
+  isSearching.value = true
+  try {
+    const response = await animalApi.searchAnimals(searchKeyword.value.trim())
+    if (response.code === 200) {
+      animals.value = response.data
+    }
+  } catch (error) {
+    console.error('搜索失败:', error)
+    ElMessage.error('搜索失败')
   }
 }
 
@@ -109,6 +150,15 @@ onMounted(() => {
 .welcome-section h1 {
   color: #2c3e50;
   margin-bottom: 20px;
+}
+
+.search-section {
+  max-width: 600px;
+  margin: 30px auto;
+}
+
+.search-input {
+  width: 100%;
 }
 
 .featured-animals {
@@ -146,13 +196,13 @@ onMounted(() => {
   margin: 10px 0;
 }
 
-.el-tag {
-  margin-top: 10px;
-}
-
 .category {
   color: #909399;
   margin: 5px 0;
   font-size: 14px;
+}
+
+.el-tag {
+  margin-top: 10px;
 }
 </style> 

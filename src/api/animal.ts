@@ -26,7 +26,13 @@ export const animalApi = {
     
   // 按类别获取动物
   getAnimalsByCategory: (category: string) =>
-    request.get<ApiResponse<Animal[]>>(`/animals/category/${category}`)
+    request.get<ApiResponse<Animal[]>>(`/animals/category/${category}`),
+    
+  // 添加搜索接口
+  searchAnimals: (keyword: string) =>
+    request.get<ApiResponse<Animal[]>>('/animals/search', {
+      params: { keyword }
+    })
 }
 
 // 导出单独的函数，兼容旧的导入方式
