@@ -23,8 +23,8 @@ interface UserProfileData {
 
 // 注册请求参数接口
 export interface RegisterRequest {
-  username: string   // 用户名
-  password: string   // 密码
+  username: string
+  password: string
 }
 
 // 用户实体接口，与后端 User 实体对应
@@ -56,10 +56,13 @@ export function login(data: LoginData) {
 // 注册方法
 export function register(data: RegisterRequest) {
   console.log('Registering with data:', data)
-  return request<RegisterResponse>({
+  return request({
     url: '/auth/register',
     method: 'post',
-    data
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data: JSON.stringify(data)  // 确保数据被正确序列化为 JSON 字符串
   })
 }
 
