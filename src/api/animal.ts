@@ -1,45 +1,28 @@
 import request from '@/utils/request'
 import type { ApiResponse } from '@/types/pollution'
 
+// 简化后的动物实体接口
 export interface Animal {
   id: number
-  categoryId: number
   name: string
   scientificName: string
-  coverImage: string | null
   description: string
   habitat: string
   conservationStatus: string
   featured: boolean
 }
 
-export interface AnimalCategory {
-  id: number
-  name: string
-  description: string
-}
-
-// 导出 API 函数
-export function getAnimalCategories() {
-  return request.get<ApiResponse<AnimalCategory[]>>('/animals/categories')
-}
-
-export function getFeaturedAnimals() {
-  return request.get<ApiResponse<Animal[]>>('/animals/featured')
-}
-
-export function getAnimalsByCategory(categoryId: number) {
-  return request.get<ApiResponse<Animal[]>>(`/animals/categories/${categoryId}/animals`)
-}
-
-export function getAnimalDetail(id: number) {
-  return request.get<ApiResponse<Animal>>(`/animals/${id}`)
-}
-
-// 也可以使用对象形式导出
+// 简化后的 API 接口
 export const animalApi = {
-  getCategories: getAnimalCategories,
-  getFeaturedAnimals,
-  getAnimalsByCategory,
-  getAnimalDetail
-} 
+  // 获取精选动物列表
+  getFeaturedAnimals: () =>
+    request.get<ApiResponse<Animal[]>>('/animals/featured'),
+    
+  // 获取动物分类列表
+  getAnimalCategories: () =>
+    request.get<ApiResponse<Animal[]>>('/animals/categories')
+}
+
+// 导出单独的函数，兼容旧的导入方式
+export const getFeaturedAnimals = () => animalApi.getFeaturedAnimals()
+export const getAnimalCategories = () => animalApi.getAnimalCategories() 

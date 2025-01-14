@@ -32,9 +32,11 @@
 </template>
 
 <script setup lang="ts">
+// 修改这里的导入语句，确保只导入我们需要的内容
 import { ref, onMounted } from 'vue'
-import { getFeaturedAnimals } from '@/api/animal'
+import { animalApi } from '@/api/animal'
 import type { Animal } from '@/api/animal'
+import { ElMessage } from 'element-plus'
 
 const animals = ref<Animal[]>([])
 const loading = ref(false)
@@ -51,20 +53,17 @@ const getStatusType = (status: string) => {
 }
 
 const loadData = async () => {
-  console.log('开始加载数据...')
   loading.value = true
   try {
-    const response = await getFeaturedAnimals()
-    console.log('返回数据:', response)
-    
-    if (response.code === 200 && Array.isArray(response.data)) {
+    const response = await animalApi.getFeaturedAnimals()
+    if (response.code === 200) {
       animals.value = response.data
-      console.log('处理后的动物数据:', animals.value)
     } else {
-      console.error('数据格式错误:', response)
+      ElMessage.error('加载数据失败')
     }
   } catch (error) {
     console.error('加载数据失败:', error)
+    ElMessage.error('加载数据失败')
   } finally {
     loading.value = false
   }
@@ -137,4 +136,4 @@ h2 {
 .status .el-tag {
   margin-left: 5px;
 }
-</style> 
+</style>
