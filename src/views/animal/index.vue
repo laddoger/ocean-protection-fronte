@@ -4,7 +4,7 @@
     
     <!-- 海洋生物列表 -->
     <div class="animals-section">
-      <h2>海洋生物图鉴</h2>
+      <h2>海洋生物</h2>
       <el-row :gutter="20">
         <el-col :span="8" v-for="animal in animals" :key="animal.id">
           <el-card class="animal-card">
@@ -50,6 +50,7 @@ const getStatusType = (status: string) => {
     default:
       return 'info'
   }
+
 }
 
 const loadData = async () => {
@@ -136,4 +137,5 @@ h2 {
 .status .el-tag {
   margin-left: 5px;
 }
+</style>
 </style>

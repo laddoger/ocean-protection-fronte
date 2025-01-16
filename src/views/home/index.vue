@@ -25,7 +25,7 @@
 
     <!-- 海洋生物展示 -->
     <div class="featured-animals">
-      <h2>{{ isSearching ? '搜索结果' : '海洋生物图鉴' }}</h2>
+      <h2>{{ isSearching ? '搜索结果' : '海洋生物' }}</h2>
       <el-empty v-if="isSearching && animals.length === 0" description="未找到相关结果" />
       <el-row :gutter="20" v-else>
         <el-col 
