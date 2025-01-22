@@ -202,7 +202,6 @@ const handleOrgMembership = async (org: OrganizationWithStatus) => {
       if (response.code === 200) {
         org.isMember = false
         ElMessage.success('已退出组织')
-        await loadOrganizations()
       } else {
         ElMessage.error(response?.message || '退出组织失败')
       }
@@ -211,20 +210,12 @@ const handleOrgMembership = async (org: OrganizationWithStatus) => {
       if (response.code === 200) {
         org.isMember = true
         ElMessage.success('成功加入组织')
-      //   // await loadOrganizations()
-      // } else {
-      //   if (response?.message?.includes('Duplicate entry')) {
-      //     // await loadOrganizations()
-      //     ElMessage.warning('您已经是该组织的成员了')
-      //   } else {
-      //     ElMessage.error(response?.message || '加入组织失败')
-      //   }
       }
     }
   } catch (error: any) {
     console.error('组织操作失败:', error)
     if (error.response?.data?.message?.includes('Duplicate entry')) {
-      await loadOrganizations()
+      org.isMember = true
       ElMessage.warning('您已经是该组织的成员了')
     } else {
       ElMessage.error(error.message || '操作失败')
@@ -243,14 +234,10 @@ const loadOrganizations = async () => {
     loading.value = true
     const response = await volunteerApi.getOrganizations()
     if (response.code === 200) {
-      const orgs = response.data
-      const orgsWithStatus = await Promise.all(
-        orgs.map(async (org) => ({
-          ...org,
-          isMember: await checkMembership(org.id)
-        }))
-      )
-      organizations.value = orgsWithStatus
+      organizations.value = response.data.map(org => ({
+        ...org,
+        isMember: false // 初始状态设为非成员
+      }))
     }
   } catch (error) {
     console.error('加载组织列表失败:', error)
@@ -275,42 +262,50 @@ const handleActivityParticipation = async (activity: Activity) => {
       const response = await volunteerApi.leaveActivity(activity.id)
       if (response && response.code === 200) {
         activity.isParticipant = false
+        activity.participantCount = (activity.participantCount || 0) - 1
         ElMessage.success('已取消报名')
-        await loadActivities() // 重新加载活动列表
       } else {
-        ElMessage.error(response?.message || '取消报名失败')
+        // 如果返回未参加活动的错误，更新状态
+        if (response?.message?.includes('未参加该活动')) {
+          activity.isParticipant = false
+          ElMessage.warning('您未参加该活动')
+        } else {
+          ElMessage.error(response?.message || '取消报名失败')
+        }
       }
     } else {
       // 报名参加
       const response = await volunteerApi.joinActivity(activity.id)
       if (response && response.code === 200) {
         activity.isParticipant = true
+        activity.participantCount = (activity.participantCount || 0) + 1
         ElMessage.success('报名成功')
-        await loadActivities() // 重新加载活动列表
       } else {
-        ElMessage.error(response?.message || '报名失败')
+        // 如果返回重复报名的错误
+        if (response?.message?.includes('Duplicate entry')) {
+          activity.isParticipant = true
+          ElMessage.warning('您已经报名参加该活动')
+        } else {
+          ElMessage.error(response?.message || '报名失败')
+        }
       }
     }
   } catch (error: any) {
     console.error('活动操作失败:', error)
-    ElMessage.error(error.message || '操作失败')
+    const errorMessage = error.response?.data?.message || error.message
+    
+    // 处理特定错误情况
+    if (errorMessage?.includes('Duplicate entry')) {
+      activity.isParticipant = true
+      ElMessage.warning('您已经报名参加该活动')
+    } else if (errorMessage?.includes('未参加该活动')) {
+      activity.isParticipant = false
+      ElMessage.warning('您未参加该活动')
+    } else {
+      ElMessage.error(errorMessage || '操作失败')
+    }
   } finally {
     loading.value = false
-  }
-}
-
-// 检查活动参与状态
-const checkActivityParticipation = async (activityId: number) => {
-  if (!userStore.isLoggedIn || !userStore.userInfo?.id) {
-    return false
-  }
-
-  try {
-    const response = await volunteerApi.isParticipant(activityId)
-    return response.code === 200 && response.data
-  } catch (error) {
-    console.error('检查活动参与状态失败:', error)
-    return false
   }
 }
 
@@ -322,14 +317,10 @@ const loadActivities = async () => {
       ? await volunteerApi.getOngoingActivities()
       : await volunteerApi.getFinishedActivities()
     if (response && response.code === 200 && Array.isArray(response.data)) {
-      // 获取每个活动的参与状态
-      const activitiesWithStatus = await Promise.all(
-        response.data.map(async (activity) => ({
-          ...activity,
-          isParticipant: await checkActivityParticipation(activity.id)
-        }))
-      )
-      activities.value = activitiesWithStatus
+      activities.value = response.data.map(activity => ({
+        ...activity,
+        isParticipant: false // 初始状态设为未参加
+      }))
     } else {
       console.error('Invalid activities response:', response)
       activities.value = []

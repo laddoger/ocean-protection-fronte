@@ -49,20 +49,8 @@ export const volunteerApi = {
   // 解散组织
   disbandOrganization: (organizationId: number) =>
     request.delete<ApiResponse<void>>(`/volunteer/organizations/${organizationId}`),
-
-  // 检查用户是否是组织成员
-  checkMembership: (organizationId: number) =>
-    request.get<ApiResponse<boolean>>(`/organizations/${organizationId}/membership`),
     
   // 退出组织
   quitOrganization: (organizationId: number) =>
-    request.post<ApiResponse<void>>(`/volunteer/organizations/${organizationId}/leave`),
-
-  // 加入组织
-  joinOrganization: (id: number) => 
-    request.post<ApiResponse<void>>(`/volunteer/organizations/${id}/join`),
-
-  // 检查用户是否参加活动
-  isParticipant: (activityId: number) =>
-    request.get<ApiResponse<boolean>>(`/volunteer/activities/${activityId}/participation`)
-} 
+    request.post<ApiResponse<void>>(`/volunteer/organizations/${organizationId}/leave`)
+}
