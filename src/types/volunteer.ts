@@ -21,6 +21,9 @@ export interface Activity {
   organizationId: number
   createdTime: string
   updatedTime: string
+  participantCount?: number
+  maxParticipants?: number
+  isParticipant?: boolean
 }
 
 // 创建组织的表单接口

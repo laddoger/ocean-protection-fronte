@@ -10,35 +10,22 @@
           </el-button>
         </div>
       </template>
-      <el-table :data="organizations" style="width: 100%" v-loading="loading">
-        <el-table-column prop="name" label="组织名称" />
-        <el-table-column prop="description" label="组织描述" />
-        <el-table-column prop="memberCount" label="成员数量" />
-        <el-table-column label="操作" width="200">
-          <template #default="scope">
-            <template v-if="isFounder(scope.row)">
+      <el-row :gutter="20">
+        <el-col :span="8" v-for="org in organizations" :key="org.id">
+          <el-card class="org-card">
+            <h3>{{ org.name }}</h3>
+            <p>{{ org.description }}</p>
+            <div class="card-footer">
               <el-button 
-                text 
-                type="danger" 
-                @click="disbandOrganization(scope.row)"
-                :loading="loading"
+                :type="org.isMember ? 'danger' : 'primary'"
+                @click="handleOrgMembership(org)"
               >
-                解散组织
+                {{ org.isMember ? '退出组织' : '加入组织' }}
               </el-button>
-            </template>
-            <template v-else>
-              <el-button 
-                text 
-                type="primary" 
-                @click="joinOrganization(scope.row)"
-                :loading="loading"
-              >
-                加入组织
-              </el-button>
-            </template>
-          </template>
-        </el-table-column>
-      </el-table>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
     </el-card>
 
     <!-- 活动列表 -->
@@ -69,10 +56,10 @@
           <template #default="scope">
             <el-button 
               text 
-              type="primary"
-              @click="joinActivity(scope.row)"
+              :type="scope.row.isParticipant ? 'danger' : 'primary'"
+              @click="handleActivityParticipation(scope.row)"
             >
-              报名参加
+              {{ scope.row.isParticipant ? '取消报名' : '报名参加' }}
             </el-button>
           </template>
         </el-table-column>
@@ -165,7 +152,7 @@ const disbandOrganization = async (organization: Organization) => {
     
     if (response && response.code === 200) {
       ElMessage.success('组织已解散')
-      await loadOrganizations()
+      // await loadOrganizations()
     } else {
       ElMessage.error(response?.message || '解散组织失败')
     }
@@ -179,28 +166,155 @@ const disbandOrganization = async (organization: Organization) => {
   }
 }
 
+// 扩展组织类型，添加成员状态
+interface OrganizationWithStatus extends Organization {
+  isMember?: boolean
+}
+
+// 检查组织成员状态
+const checkMembership = async (orgId: number) => {
+  // 首先检查用户是否已登录
+  if (!userStore.isLoggedIn || !userStore.userInfo?.id) {
+    console.warn('用户未登录或无法获取用户信息')
+    return false
+  }
+
+  try {
+    const response = await volunteerApi.checkMembership(orgId)
+    return response.code === 200 && response.data
+  } catch (error: any) {
+    console.error('检查成员状态失败:', error)
+    return false
+  }
+}
+
+// 处理组织成员关系（加入/退出）
+const handleOrgMembership = async (org: OrganizationWithStatus) => {
+  // 检查用户是否已登录
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
+  try {
+    if (org.isMember) {
+      const response = await volunteerApi.quitOrganization(org.id)
+      if (response.code === 200) {
+        org.isMember = false
+        ElMessage.success('已退出组织')
+        await loadOrganizations()
+      } else {
+        ElMessage.error(response?.message || '退出组织失败')
+      }
+    } else {
+      const response = await volunteerApi.joinOrganization(org.id)
+      if (response.code === 200) {
+        org.isMember = true
+        ElMessage.success('成功加入组织')
+      //   // await loadOrganizations()
+      // } else {
+      //   if (response?.message?.includes('Duplicate entry')) {
+      //     // await loadOrganizations()
+      //     ElMessage.warning('您已经是该组织的成员了')
+      //   } else {
+      //     ElMessage.error(response?.message || '加入组织失败')
+      //   }
+      }
+    }
+  } catch (error: any) {
+    console.error('组织操作失败:', error)
+    if (error.response?.data?.message?.includes('Duplicate entry')) {
+      await loadOrganizations()
+      ElMessage.warning('您已经是该组织的成员了')
+    } else {
+      ElMessage.error(error.message || '操作失败')
+    }
+  }
+}
+
 // 加载组织列表
 const loadOrganizations = async () => {
   try {
+    // 确保用户信息已加载
+    if (userStore.isLoggedIn && !userStore.userInfo) {
+      await userStore.loadUserInfo()
+    }
+
     loading.value = true
     const response = await volunteerApi.getOrganizations()
-    if (response && response.code === 200 && Array.isArray(response.data)) {
-      organizations.value = response.data
-    } else {
-      console.error('Invalid organizations response:', response)
-      organizations.value = []
-      ElMessage.error('加载组织列表失败')
+    if (response.code === 200) {
+      const orgs = response.data
+      const orgsWithStatus = await Promise.all(
+        orgs.map(async (org) => ({
+          ...org,
+          isMember: await checkMembership(org.id)
+        }))
+      )
+      organizations.value = orgsWithStatus
     }
   } catch (error) {
-    console.error('Failed to load organizations:', error)
-    organizations.value = []
+    console.error('加载组织列表失败:', error)
     ElMessage.error('加载组织列表失败')
   } finally {
     loading.value = false
   }
 }
 
-// 加载活动列表
+// 处理活动参与（报名/取消报名）
+const handleActivityParticipation = async (activity: Activity) => {
+  // 检查用户是否已登录
+  if (!userStore.isLoggedIn) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
+  try {
+    loading.value = true
+    if (activity.isParticipant) {
+      // 取消报名
+      const response = await volunteerApi.leaveActivity(activity.id)
+      if (response && response.code === 200) {
+        activity.isParticipant = false
+        ElMessage.success('已取消报名')
+        await loadActivities() // 重新加载活动列表
+      } else {
+        ElMessage.error(response?.message || '取消报名失败')
+      }
+    } else {
+      // 报名参加
+      const response = await volunteerApi.joinActivity(activity.id)
+      if (response && response.code === 200) {
+        activity.isParticipant = true
+        ElMessage.success('报名成功')
+        await loadActivities() // 重新加载活动列表
+      } else {
+        ElMessage.error(response?.message || '报名失败')
+      }
+    }
+  } catch (error: any) {
+    console.error('活动操作失败:', error)
+    ElMessage.error(error.message || '操作失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 检查活动参与状态
+const checkActivityParticipation = async (activityId: number) => {
+  if (!userStore.isLoggedIn || !userStore.userInfo?.id) {
+    return false
+  }
+
+  try {
+    const response = await volunteerApi.isParticipant(activityId)
+    return response.code === 200 && response.data
+  } catch (error) {
+    console.error('检查活动参与状态失败:', error)
+    return false
+  }
+}
+
+// 修改加载活动列表函数
 const loadActivities = async () => {
   try {
     loading.value = true
@@ -208,7 +322,14 @@ const loadActivities = async () => {
       ? await volunteerApi.getOngoingActivities()
       : await volunteerApi.getFinishedActivities()
     if (response && response.code === 200 && Array.isArray(response.data)) {
-      activities.value = response.data
+      // 获取每个活动的参与状态
+      const activitiesWithStatus = await Promise.all(
+        response.data.map(async (activity) => ({
+          ...activity,
+          isParticipant: await checkActivityParticipation(activity.id)
+        }))
+      )
+      activities.value = activitiesWithStatus
     } else {
       console.error('Invalid activities response:', response)
       activities.value = []
@@ -244,60 +365,16 @@ const createOrganization = async () => {
   }
 }
 
-// 加入组织
-const joinOrganization = async (organization: Organization) => {
-  try {
-    loading.value = true
-    const response = await volunteerApi.joinOrganization(organization.id)
-    if (response && response.code === 200) {
-      ElMessage.success('加入组织成功')
-      await loadOrganizations()
-    } else {
-      ElMessage.error('加入组织失败')
-    }
-  } catch (error) {
-    console.error('Failed to join organization:', error)
-    ElMessage.error('加入组织失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-// 报名参加活动
-const joinActivity = async (activity: Activity) => {
-  try {
-    loading.value = true
-    const response = await volunteerApi.joinActivity(activity.id)
-    if (response && response.code === 200) {
-      ElMessage.success('报名成功')
-      await loadActivities()
-    } else {
-      ElMessage.error('报名失败')
-    }
-  } catch (error) {
-    console.error('Failed to join activity:', error)
-    ElMessage.error('报名失败')
-  } finally {
-    loading.value = false
-  }
-}
-
 onMounted(async () => {
-  try {
-    // 确保先加载用户信息
-    if (userStore.isLoggedIn && !userStore.userInfo) {
-      await userStore.loadUserInfo()
-    }
-    
-    // 并行加载组织和活动列表
-    await Promise.all([
-      loadOrganizations(),
-      loadActivities()
-    ])
-  } catch (error) {
-    console.error('Failed to initialize volunteer page:', error)
-    ElMessage.error('加载数据失败')
+  // 确保先加载用户信息
+  if (userStore.isLoggedIn && !userStore.userInfo) {
+    await userStore.loadUserInfo()
   }
+  // 并行加载组织和活动列表
+  await Promise.all([
+    loadOrganizations(),
+    loadActivities()
+  ])
 })
 </script>
 
@@ -320,5 +397,16 @@ onMounted(async () => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.org-card {
+  margin-bottom: 20px;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
 }
 </style> 
