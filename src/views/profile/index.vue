@@ -59,7 +59,6 @@
       <el-table :data="posts" style="width: 100%">
         <el-table-column prop="title" label="标题" />
         <el-table-column prop="createdTime" label="发布时间" />
-        <el-table-column prop="viewCount" label="浏览数" />
         <el-table-column prop="likeCount" label="点赞数" />
         <el-table-column label="操作">
           <template #default="scope">
