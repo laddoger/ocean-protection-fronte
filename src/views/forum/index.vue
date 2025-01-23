@@ -352,16 +352,31 @@ const addComment = async (post: Post) => {
     const response = await forumApi.addComment(post.id, newComment.value.trim())
     
     if (response && response.code === 200) {
-      // 重新加载评论
-      await showComments(post)
+      // 更新评论列表
+      if (!post.comments) {
+        post.comments = []
+      }
+      // 添加完整的评论信息
+      const commentWithUser = {
+        ...response.data,
+        content: newComment.value.trim(), // 确保包含评论内容
+        createdTime: new Date().toISOString(), // 添加创建时间
+        user: {
+          id: userStore.userInfo?.id || 0,
+          username: userStore.userInfo?.username || '未知用户'
+        }
+      }
+      post.comments.push(commentWithUser)
+      // 更新评论数
+      post.commentCount = (post.commentCount || 0) + 1
       newComment.value = ''
       ElMessage.success('评论成功')
     } else {
-      ElMessage.error('评论失败')
+      ElMessage.error(response?.message || '评论失败')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to add comment:', error)
-    ElMessage.error('评论失败')
+    ElMessage.error(error.response?.data?.message || '评论失败')
   } finally {
     loading.value = false
   }
