@@ -37,13 +37,22 @@
           :lg="6"
         >
           <el-card class="animal-card" @click="showAnimalDetail(animal)">
-            <div class="animal-info">
-              <h3>{{ animal.name }}</h3>
-              <p class="scientific-name">{{ animal.scientificName }}</p>
-              <p class="category">{{ animal.category }}</p>
-              <el-tag :type="getStatusType(animal.conservationStatus)">
-                {{ animal.conservationStatus }}
-              </el-tag>
+            <div class="card-body">
+              <div class="image-container">
+                <el-image 
+                  :src="animal.imageUrl || 'https://via.placeholder.com/300x300?text=海洋生物'" 
+                  fit="cover"
+                  class="animal-image"
+                />
+              </div>
+              <div class="animal-info">
+                <h3>{{ animal.name }}</h3>
+                <p class="scientific-name">{{ animal.scientificName }}</p>
+                <p class="category">{{ animal.category }}</p>
+                <el-tag :type="getStatusType(animal.conservationStatus)">
+                  {{ animal.conservationStatus }}
+                </el-tag>
+              </div>
             </div>
           </el-card>
         </el-col>
@@ -175,34 +184,68 @@ onMounted(() => {
   margin-bottom: 20px;
   cursor: pointer;
   transition: transform 0.3s;
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%; /* 使卡片保持1:1的宽高比 */
+  position: relative;
 }
 
-.animal-card:hover {
-  transform: translateY(-5px);
+.card-body {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.image-container {
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  position: relative;
+}
+
+.animal-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .animal-info {
+  flex: 1;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 
 .animal-info h3 {
   margin: 0;
   color: #2c3e50;
+  font-size: 1.2em;
 }
 
 .scientific-name {
   font-style: italic;
   color: #666;
-  margin: 10px 0;
+  margin: 8px 0;
+  font-size: 0.9em;
 }
 
 .category {
   color: #909399;
   margin: 5px 0;
-  font-size: 14px;
+  font-size: 0.9em;
 }
 
 .el-tag {
-  margin-top: 10px;
+  margin-top: 8px;
+}
+
+.animal-card:hover {
+  transform: translateY(-5px);
 }
 </style> 
