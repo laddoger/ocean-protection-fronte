@@ -1,0 +1,65 @@
+@startuml
+
+' 基础设置
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam packageStyle rectangle
+
+' 定义包和组件
+package "Frontend Application" {
+    [Vue.js Application] as app
+    [Pinia Store] as store
+    [Router] as router
+    [Element Plus UI] as ui
+}
+
+package "Core Modules" {
+    package "User Module" {
+        [Authentication] as auth
+        [Profile Management] as profile
+        [User Activities] as activities
+    }
+
+    package "Volunteer Module" {
+        [Organization Management] as org
+        [Activity Management] as act
+    }
+
+    package "Forum Module" {
+        [Posts Management] as posts
+        [Comments] as comments
+    }
+
+    package "Ocean Module" {
+        [Pollution Tracking] as pollution
+        [Marine Life] as marine
+    }
+}
+
+package "API Layer" {
+    [API Client] as apiClient
+    [Request Interceptor] as interceptor
+    [Response Handler] as handler
+}
+
+' 定义关系
+app --> store
+app --> router
+app --> ui
+
+auth --> apiClient
+org --> apiClient
+posts --> apiClient
+pollution --> apiClient
+
+apiClient --> interceptor
+apiClient --> handler
+
+auth --> profile
+org --> act
+
+note right of app : Vue 3 + TypeScript
+note right of apiClient : API Interface
+
+@enduml 

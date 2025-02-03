@@ -1,0 +1,26 @@
+:root {
+  --el-color-primary: #64B5F6;  // 浅蓝色主色调
+  --el-color-primary-light-3: #90CAF9;
+  --el-color-primary-light-5: #BBDEFB;
+  --el-color-primary-light-7: #E3F2FD;
+  --el-color-primary-light-9: #F5FAFF;
+  --el-color-primary-dark-2: #42A5F5;
+}
+
+// 导航栏样式
+.el-menu {
+  background-color: var(--el-color-primary) !important;
+}
+
+.el-menu-item, .el-sub-menu__title {
+  color: white !important;
+  
+  &:hover, &:focus {
+    background-color: var(--el-color-primary-dark-2) !important;
+  }
+}
+
+.el-menu-item.is-active {
+  background-color: var(--el-color-primary-dark-2) !important;
+  color: white !important;
+} 
