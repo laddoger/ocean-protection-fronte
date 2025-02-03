@@ -40,7 +40,7 @@
             <div class="card-body">
               <div class="image-container">
                 <el-image 
-                  :src="animal.imageUrl || 'https://via.placeholder.com/300x300?text=海洋生物'" 
+                  :src="getImageUrl(animal.imageUrl)"
                   fit="cover"
                   class="animal-image"
                 />
@@ -100,6 +100,23 @@ const getStatusType = (status: string) => {
     default:
       return ''
   }
+}
+
+// 获取图片完整URL
+const getImageUrl = (imageUrl: string | undefined) => {
+  if (!imageUrl) {
+    return 'https://via.placeholder.com/300x300?text=海洋生物'
+  }
+  // 如果imageUrl已经是完整的URL（以http或https开头），则直接返回
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl
+  }
+  // 如果imageUrl已经包含了/images/animals/路径，则只需要添加基础URL
+  if (imageUrl.startsWith('/images/animals/')) {
+    return `http://localhost:8080${imageUrl}`
+  }
+  // 否则拼接完整路径
+  return `http://localhost:8080/images/animals/${imageUrl}`
 }
 
 // 显示动物详情
