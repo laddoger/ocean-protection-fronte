@@ -7,6 +7,11 @@ export const volunteerApi = {
   // 组织相关
   getOrganizations: () => 
     request.get<ApiResponse<Organization[]>>('/volunteer/organizations'),
+
+   // 检查是否是组织成员
+   checkMembership: (organizationId: number) => 
+    request.get<boolean>(`/organizations/${organizationId}/membership`),
+
   
   searchOrganizations: (keyword: string) => 
     request.get<Organization[]>('/volunteer/organizations/search', {
@@ -39,6 +44,10 @@ export const volunteerApi = {
   
   getActivityDetail: (id: number) => 
     request.get<Activity>(`/volunteer/activities/${id}`),
+
+  // 检查是否参加活动
+  checkActivityParticipation: (activityId: number) =>
+    request.get<ApiResponse<boolean>>(`/volunteer/activities/${activityId}/participation`),
   
   joinActivity: (id: number) => 
     request.post<void>(`/volunteer/activities/${id}/join`),

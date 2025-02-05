@@ -226,7 +226,7 @@ const loadActivities = async () => {
 
 // 查看帖子详情
 const viewPost = (post: Post) => {
-  router.push(`/forum/post/${post.id}`)
+  router.push('/forum')
 }
 
 // 加载用户加入的组织
@@ -244,7 +244,7 @@ const loadOrganizations = async () => {
 
 // 查看组织详情
 const viewOrganization = (org: Organization) => {
-  router.push(`/volunteer/organization/${org.id}`)
+  router.push('/volunteer')
 }
 
 // 退出组织
