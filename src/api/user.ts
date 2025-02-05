@@ -84,14 +84,13 @@ export function updateUserProfile(data: UserProfileData) {
 }
 
 // 上传头像方法
-export function uploadAvatar(data: FormData) {
-  return request({
-    url: '/auth/user/avatar',
-    method: 'post',
+export function uploadAvatar(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request.post<ApiResponse<string>>('/auth/avatar', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
-    },
-    data
+    }
   })
 }
 
@@ -123,5 +122,16 @@ export const userApi = {
   
   // 获取用户参加的活动列表
   getUserActivities: () =>
-    request.get<ApiResponse<Activity[]>>('/auth/user/activities')
+    request.get<ApiResponse<Activity[]>>('/auth/user/activities'),
+  
+  // 上传头像
+  uploadAvatar: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post<ApiResponse<string>>('/auth/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
 } 

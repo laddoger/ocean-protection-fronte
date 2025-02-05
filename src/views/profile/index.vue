@@ -6,6 +6,22 @@
         <h3>个人信息</h3>
       </template>
 
+      <!-- 头像上传区域 -->
+      <div class="avatar-container">
+        <el-avatar
+          :size="100"
+          :src="avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"
+        />
+        <el-upload
+          class="avatar-uploader"
+          :show-file-list="false"
+          :before-upload="beforeAvatarUpload"
+          :http-request="handleAvatarUpload"
+        >
+          <el-button type="primary" class="upload-btn">更换头像</el-button>
+        </el-upload>
+      </div>
+
       <el-form 
         ref="formRef"
         :model="profileForm"
@@ -129,6 +145,7 @@ import { volunteerApi } from '@/api/volunteer'
 import type { UserProfile, UpdateProfileRequest } from '@/types/user'
 import type { Post } from '@/types/forum'
 import type { Activity, Organization } from '@/types/volunteer'
+import type { UploadProps, UploadRequestOptions } from 'element-plus'
 
 const router = useRouter()
 const loading = ref(false)
@@ -146,11 +163,54 @@ const posts = ref<Post[]>([])
 const activities = ref<Activity[]>([])
 const organizations = ref<Organization[]>([])
 
+// 添加头像URL响应式变量
+const avatarUrl = ref<string>('')
+
 // 表单验证规则
 const rules = {
   gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
   age: [{ required: true, message: '请输入年龄', trigger: 'blur' }],
   address: [{ required: true, message: '请输入地址', trigger: 'blur' }]
+}
+
+// 头像上传前的验证
+const beforeAvatarUpload: UploadProps['beforeUpload'] = (file) => {
+  // 检查文件类型
+  const isImage = file.type.startsWith('image/')
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件！')
+    return false
+  }
+
+  // 检查文件大小（2MB = 2 * 1024 * 1024 bytes）
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB！')
+    return false
+  }
+
+  return true
+}
+
+// 处理头像上传
+const handleAvatarUpload = async (options: UploadRequestOptions) => {
+  try {
+    const file = options.file
+    const response = await userApi.uploadAvatar(file)
+    
+    if (response.code === 200 && response.data) {
+      avatarUrl.value = response.data
+      ElMessage.success('头像上传成功')
+      
+      // 更新用户信息
+      await loadUserProfile()
+    } else {
+      ElMessage.error(response.message || '头像上传失败')
+    }
+  } catch (error) {
+    console.error('Failed to upload avatar:', error)
+    ElMessage.error('头像上传失败')
+  }
 }
 
 // 加载用户信息
@@ -164,6 +224,10 @@ const loadUserProfile = async () => {
         gender: response.data.gender || 'OTHER',
         age: response.data.age || 0,
         address: response.data.address || ''
+      }
+      // 设置头像URL
+      if (response.data.avatarUrl) {
+        avatarUrl.value = response.data.avatarUrl
       }
       console.log('Updated profile form:', profileForm.value)
     }
@@ -304,5 +368,21 @@ onMounted(async () => {
 
 .el-form {
   max-width: 500px;
+}
+
+.avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+
+.avatar-uploader {
+  text-align: center;
+}
+
+.upload-btn {
+  margin-top: 10px;
 }
 </style>
