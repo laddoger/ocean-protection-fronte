@@ -5,6 +5,7 @@ export interface Organization {
   description: string
   memberCount: number
   leaderId: number
+  founderId: number  // 创建者ID
   createdTime: string
   updatedTime: string
 }

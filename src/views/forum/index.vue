@@ -10,74 +10,88 @@
     <!-- 帖子列表 -->
     <div class="post-list">
       <el-card v-for="post in posts" :key="post.id" class="post-card">
-        <div class="post-header">
-          <div class="post-meta">
-            <h3 class="post-title">{{ post.title }}</h3>
-            <span class="time">发布于: {{ post.createdTime }}</span>
+        <div class="post-layout">
+          <!-- 帖子图片 -->
+          <div class="post-image-container">
+            <el-image 
+              :src="post.imageUrl || 'https://via.placeholder.com/200x200?text=暂无图片'"
+              fit="cover"
+              class="post-image"
+            />
           </div>
-          <div v-if="userStore.userInfo">
-            <p>当前用户ID: {{ userStore.userInfo.id }}</p>
-            <p>帖子用户ID: {{ post.userId }}</p>
-          </div>
-          <div class="post-actions" v-if="canEditPost(post)">
-            <el-button text type="primary" @click="editPost(post)">
-              <el-icon><Edit /></el-icon>
-            </el-button>
-            <el-button text type="danger" @click="deletePost(post)">
-              <el-icon><Delete /></el-icon>
-            </el-button>
-          </div>
-        </div>
-        
-        <p class="post-content">{{ post.content }}</p>
-        
-        <div class="post-actions">
-          <el-button text @click="toggleLike(post)">
-            <el-icon><Star :class="{ 'liked': post.isLiked }" /></el-icon>
-            <span :class="{ 'liked': post.isLiked }">
-              点赞 {{ post.likeCount || 0 }}
-            </span>
-          </el-button>
-          <el-button text @click="showComments(post)">
-            <el-icon><ChatDotRound /></el-icon>
-            评论 {{ post.commentCount }}
-          </el-button>
-        </div>
 
-        <!-- 评论区 -->
-        <div v-if="post.showComments" class="comments-section">
-          <el-divider>评论</el-divider>
-          <div class="comment-list">
-            <div v-if="!post.comments?.length" class="no-comments">
-              暂无评论
-            </div>
-            <div v-else v-for="comment in post.comments" :key="comment.id" class="comment-item">
-              <div class="comment-content">
-                <div class="comment-header">
-                  <span class="comment-info">{{ comment.user?.username || `用户${comment.userId}` }}</span>
-                  <span class="time">{{ comment.createdTime }}</span>
-                </div>
-                <p>{{ comment.content }}</p>
+          <!-- 帖子内容 -->
+          <div class="post-content-container">
+            <div class="post-header">
+              <div class="post-meta">
+                <h3 class="post-title">{{ post.title }}</h3>
+                <span class="time">发布于: {{ post.createdTime }}</span>
+              </div>
+              <div v-if="userStore.userInfo">
+                <p>当前用户ID: {{ userStore.userInfo.id }}</p>
+                <p>帖子用户ID: {{ post.userId }}</p>
+              </div>
+              <div class="post-actions" v-if="canEditPost(post)">
+                <el-button text type="primary" @click="editPost(post)">
+                  <el-icon><Edit /></el-icon>
+                </el-button>
+                <el-button text type="danger" @click="deletePost(post)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
               </div>
             </div>
-          </div>
-          
-          <!-- 评论输入框 -->
-          <div class="comment-input">
-            <el-input
-              v-model="newComment"
-              placeholder="发表评论..."
-              :rows="2"
-              type="textarea"
-              :disabled="loading"
-            />
-            <el-button 
-              type="primary" 
-              @click="addComment(post)"
-              :loading="loading"
-            >
-              发表评论
-            </el-button>
+            
+            <p class="post-content">{{ post.content }}</p>
+            
+            <div class="post-actions">
+              <el-button text @click="toggleLike(post)">
+                <el-icon><Star :class="{ 'liked': post.isLiked }" /></el-icon>
+                <span :class="{ 'liked': post.isLiked }">
+                  点赞 {{ post.likeCount || 0 }}
+                </span>
+              </el-button>
+              <el-button text @click="showComments(post)">
+                <el-icon><ChatDotRound /></el-icon>
+                评论 {{ post.commentCount }}
+              </el-button>
+            </div>
+
+            <!-- 评论区 -->
+            <div v-if="post.showComments" class="comments-section">
+              <el-divider>评论</el-divider>
+              <div class="comment-list">
+                <div v-if="!post.comments?.length" class="no-comments">
+                  暂无评论
+                </div>
+                <div v-else v-for="comment in post.comments" :key="comment.id" class="comment-item">
+                  <div class="comment-content">
+                    <div class="comment-header">
+                      <span class="comment-info">{{ comment.user?.username || `用户${comment.userId}` }}</span>
+                      <span class="time">{{ comment.createdTime }}</span>
+                    </div>
+                    <p>{{ comment.content }}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 评论输入框 -->
+              <div class="comment-input">
+                <el-input
+                  v-model="newComment"
+                  placeholder="发表评论..."
+                  :rows="2"
+                  type="textarea"
+                  :disabled="loading"
+                />
+                <el-button 
+                  type="primary" 
+                  @click="addComment(post)"
+                  :loading="loading"
+                >
+                  发表评论
+                </el-button>
+              </div>
+            </div>
           </div>
         </div>
       </el-card>
@@ -93,6 +107,22 @@
         <el-form-item label="标题" prop="title">
           <el-input v-model="newPost.title" />
         </el-form-item>
+        
+        <!-- 添加图片上传 -->
+        <el-form-item label="图片">
+          <el-upload
+            class="post-image-uploader"
+            :show-file-list="false"
+            :auto-upload="false"
+            :http-request="handleImageUpload"
+            :before-upload="beforeImageUpload"
+            @change="handleImageChange"
+          >
+            <img v-if="imageUrl" :src="imageUrl" class="uploaded-image" />
+            <el-icon v-else class="upload-icon"><Plus /></el-icon>
+          </el-upload>
+        </el-form-item>
+
         <el-form-item label="内容" prop="content">
           <el-input
             v-model="newPost.content"
@@ -127,6 +157,7 @@ import {
 } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 import { forumApi, type Post, type ForumComment } from '@/api/forum'
+import { UploadProps } from 'element-plus'
 
 const userStore = useUserStore()
 const formRef = ref<FormInstance>()
@@ -215,6 +246,56 @@ const canEditPost = (post: Post) => {
   return isMatch
 }
 
+// 添加图片相关的响应式变量
+const imageUrl = ref('')
+const imageFile = ref<File | null>(null)
+
+// 图片上传前的验证
+const beforeImageUpload: UploadProps['beforeUpload'] = (file) => {
+  const isImage = file.type.startsWith('image/')
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件！')
+    return false
+  }
+
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB！')
+    return false
+  }
+
+  return true
+}
+
+// 处理图片上传
+const handleImageUpload = async (options: any) => {
+  try {
+    const formData = new FormData()
+    formData.append('file', options.file)
+    const response = await forumApi.uploadImage(options.file)
+    if (response?.data?.code === 200) {
+      imageUrl.value = response.data.data
+      imageFile.value = options.file // 保存文件引用
+      options.onSuccess(response)
+    } else {
+      options.onError(new Error('上传失败'))
+    }
+  } catch (error) {
+    console.error('图片上传失败:', error)
+    options.onError(error)
+  }
+}
+
+// 修改图片变更处理函数
+const handleImageChange = (uploadFile: any) => {
+  const file = uploadFile.raw
+  if (file) {
+    imageFile.value = file
+    // 使用本地预览
+    imageUrl.value = URL.createObjectURL(file)
+  }
+}
+
 // 提交帖子
 const submitPost = async () => {
   if (!formRef.value) return
@@ -223,32 +304,38 @@ const submitPost = async () => {
     if (valid) {
       try {
         loading.value = true
+        
         const postData = {
           title: newPost.value.title,
           content: newPost.value.content,
+          image: imageFile.value || undefined  // 使用实际的文件对象而不是 URL
         }
-        
-        console.log('Submitting post data:', postData)
+
+        console.log('提交的数据:', postData) // 添加日志
+
         if (isEditing.value && editingPostId.value) {
-          console.log('Updating post:', editingPostId.value)
           await forumApi.updatePost(editingPostId.value, postData)
-          ElMessage.success('更新成功')
         } else {
           await forumApi.createPost(postData)
-          ElMessage.success('发布成功')
         }
         
+        // 重置表单和状态
+        ElMessage.success(isEditing.value ? '更新成功' : '发布成功')
         dialogVisible.value = false
         isEditing.value = false
         editingPostId.value = null
         newPost.value = {
           title: '',
           content: '',
+          tag: '',
+          images: []
         }
+        imageUrl.value = ''
+        imageFile.value = null
         await loadPosts()
-      } catch (error) {
-        console.error('Submit post error:', error)
-        ElMessage.error(isEditing.value ? '更新失败' : '发布失败')
+      } catch (error: any) {
+        console.error('Failed to submit post:', error)
+        ElMessage.error(error.message || (isEditing.value ? '更新失败' : '发布失败'))
       } finally {
         loading.value = false
       }
@@ -267,7 +354,13 @@ const editPost = async (post: Post) => {
   editingPostId.value = post.id
   newPost.value = {
     title: post.title,
-    content: post.content
+    content: post.content,
+    tag: '',
+    images: []
+  }
+  // 如果帖子有图片，设置图片URL
+  if (post.imageUrl) {
+    imageUrl.value = post.imageUrl
   }
   dialogVisible.value = true
 }
@@ -425,16 +518,6 @@ const toggleLike = async (post: Post) => {
   }
 }
 
-// 处理图片上传
-const handleImageChange = async (file: File) => {
-  try {
-    const res = await forumApi.uploadImage(file)
-    newPost.value.images.push(res.url)
-  } catch (error) {
-    ElMessage.error('图片上传失败')
-  }
-}
-
 // 在组件挂载时加载帖子列表
 onMounted(() => {
   loadPosts()
@@ -463,6 +546,29 @@ onMounted(() => {
 
 .post-card {
   margin-bottom: 20px;
+}
+
+.post-layout {
+  display: flex;
+  gap: 20px;
+}
+
+.post-image-container {
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-content-container {
+  flex: 1;
 }
 
 .post-header {
@@ -502,19 +608,6 @@ onMounted(() => {
   color: #606266;
   line-height: 1.6;
   margin-bottom: 15px;
-}
-
-.post-images {
-  display: flex;
-  gap: 10px;
-  margin: 15px 0;
-  flex-wrap: wrap;
-}
-
-.post-image {
-  width: 200px;
-  height: 150px;
-  border-radius: 4px;
 }
 
 .post-actions {
@@ -584,5 +677,33 @@ onMounted(() => {
 
 .post-actions .el-icon {
   margin-right: 2px;
+}
+
+.post-image-uploader {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  width: 178px;
+  height: 178px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.post-image-uploader:hover {
+  border-color: #409EFF;
+}
+
+.upload-icon {
+  font-size: 28px;
+  color: #8c939d;
+}
+
+.uploaded-image {
+  width: 178px;
+  height: 178px;
+  object-fit: cover;
 }
 </style> 

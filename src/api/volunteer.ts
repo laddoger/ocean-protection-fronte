@@ -57,7 +57,7 @@ export const volunteerApi = {
 
   // 解散组织
   disbandOrganization: (organizationId: number) =>
-    request.delete<ApiResponse<void>>(`/volunteer/organizations/${organizationId}`),
+    request.delete<ApiResponse<void>>(`/volunteer/organizations/${organizationId}/disband`),
     
   // 退出组织
   quitOrganization: (organizationId: number) =>

@@ -22,6 +22,13 @@
               >
                 {{ org.isMember ? '退出组织' : '加入组织' }}
               </el-button>
+              <el-button
+                v-if="org.founderId === userStore.userInfo?.id"
+                type="danger"
+                @click="disbandOrganization(org)"
+              >
+                解散组织
+              </el-button>
             </div>
           </el-card>
         </el-col>
@@ -153,7 +160,8 @@ const disbandOrganization = async (organization: Organization) => {
     
     if (response && response.code === 200) {
       ElMessage.success('组织已解散')
-      // await loadOrganizations()
+      // 从列表中移除该组织
+      organizations.value = organizations.value.filter(org => org.id !== organization.id)
     } else {
       ElMessage.error(response?.message || '解散组织失败')
     }
